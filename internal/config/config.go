@@ -35,13 +35,9 @@ func Read() (Config, error) {
 	return config, nil
 }
 
-func (cfg Config) SetUser(user string) error {
-	cfg, err := Read()
-	if err != nil {
-		return err
-	}
-	cfg.CurrentUserName = user
-	return write(cfg)
+func (c *Config) SetUser(user string) error {
+	c.CurrentUserName = user
+	return write(*c)
 }
 
 func getConfigFilePath() (string, error) {
