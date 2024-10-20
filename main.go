@@ -1,23 +1,35 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/GoldenMM/blog-aggregator/internal/config"
+	"github.com/GoldenMM/blog-aggregator/internal/database"
+	_ "github.com/lib/pq"
 )
 
 type state struct {
+	db  *database.Queries
 	cfg *config.Config
 }
 
 func main() {
+
 	// Create the program's State
 	c, err := config.Read()
 	if err != nil {
 		log.Fatal(err)
 	}
-	s := &state{cfg: &c}
+	// Open a connection to the database
+	db, err := sql.Open("postgres", c.DbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbQueries := database.New(db)
+
+	s := &state{db: dbQueries, cfg: &c}
 
 	// Create and register the commands
 	cmds := commands{regCmds: make(map[string]func(*state, command) error)}
