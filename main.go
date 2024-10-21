@@ -1,3 +1,5 @@
+// "postgres://postgres:postgres@localhost:5432/gator"
+
 package main
 
 import (
@@ -34,6 +36,9 @@ func main() {
 	// Create and register the commands
 	cmds := commands{regCmds: make(map[string]func(*state, command) error)}
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerGetUsers)
 
 	// Read the commands from the input
 	if len(os.Args) < 2 {
