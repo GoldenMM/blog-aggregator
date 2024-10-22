@@ -17,7 +17,7 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 
 	// Check if feed exists
 	var feed database.Feed
-	_, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
+	feed, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
 	if err != nil {
 		// Not in database therefore fetch it from the internet
 		rssFeed, err := fetchFeed(context.Background(), cmd.args[0])
@@ -29,7 +29,7 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 		args := database.AddFeedParams{
 			ID:        uuid.New(),
 			Name:      rssFeed.Channel.Title,
-			Url:       rssFeed.Channel.Link,
+			Url:       cmd.args[0],
 			CreatedAt: now,
 			UpdatedAt: now,
 			UserID:    user.ID,

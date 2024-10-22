@@ -26,14 +26,19 @@ type RSSItem struct {
 }
 
 func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
-	client := &http.Client{}
+
+	client := &http.Client{
+		Timeout: 10 * http.DefaultClient.Timeout,
+	}
 	// Create a new request
 	req, err := http.NewRequestWithContext(ctx, "GET", feedURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("User-Agent", "gator")
-
+	req.Header.Add("User-Agent", "curl/7.81.0")
+	req.Header.Add("Accept", "application/rss+xml, application/xml; q=0.9, */*; q=0.8")
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("Pragma", "no-cache")
 	// Send the request
 	resp, err := client.Do(req)
 	if err != nil {
@@ -43,6 +48,11 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 	contentType := resp.Header.Get("Content-Type")
 	fmt.Println("Content-Type:", contentType)
+	fmt.Println("Status:", resp.Status)
+	fmt.Println("Location:", resp.Header.Get("Location"))
+	// if contentType != "application/rss+xml" {
+	// 	return nil, fmt.Errorf("unexpected content type: %s", contentType)
+	// }
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unable to fetch feed: %s", resp.Status)
@@ -60,6 +70,7 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	feed := &RSSFeed{}
 	err = xml.Unmarshal(respBodyData, feed)
 	if err != nil {
+		fmt.Println("UNMARSHAL ERROR")
 		return nil, err
 	}
 
@@ -67,10 +78,10 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	feed.Channel.Title = html.UnescapeString(feed.Channel.Title)
 	feed.Channel.Description = html.UnescapeString(feed.Channel.Description)
 	feed.Channel.Link = html.UnescapeString(feed.Channel.Link)
-	for _, item := range feed.Channel.Items {
+	for i, item := range feed.Channel.Items {
 		item.Title = html.UnescapeString(item.Title)
 		item.Description = html.UnescapeString(item.Description)
-		item.Link = html.UnescapeString(item.Link)
+		feed.Channel.Items[i] = item
 	}
 
 	return feed, nil
